@@ -1,0 +1,9 @@
+export default function Loading() {
+  return (
+    <div className="flex flex-col items-center justify-center h-64">
+      {/* 这是一个利用 Tailwind CSS 实现的旋转圆圈 */}
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <p className="mt-4 text-gray-500 font-medium">正在加载光影世界...</p>
+    </div>
+  );
+}
