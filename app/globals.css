@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+@theme {
+  --color-wut-blue: #005BAC;
+  --color-wut-gray: #F8F9FA;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-gray-900 antialiased;
+  }
+}
+
+.glass-nav {
+  @apply sticky top-0 z-50 w-full;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px); 
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+  transition: all 0.3s ease-in-out;
+}
+
+.masonry-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .masonry-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nav-container {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 4px;
+}
+
+.nav-item {
+  position: relative;
+  background: transparent;
+  border: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  color: #64748b;
+}
+
+.nav-item-active {
+  background-color: #ffffff;
+  color: #2563eb !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.nav-item:hover:not(.nav-item-active) {
+  color: #1e293b;
+}
