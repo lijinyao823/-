@@ -29,7 +29,7 @@ export default function TagsPage() {
             .map((t: any) => ({
               id: t.id,
               name: t.name,
-              count: Array.isArray(t.photo_tags) ? t.photo_tags.length : 0,
+              count: Array.isArray(t.photo_tags) ? (t.photo_tags[0]?.count ?? 0) : 0,
             }))
             .filter((t: TagWithCount) => t.count > 0)
             .sort((a: TagWithCount, b: TagWithCount) => b.count - a.count);

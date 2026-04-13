@@ -92,10 +92,22 @@
       "namedRegex": "^/messages(?:/)?$"
     },
     {
+      "page": "/photographers",
+      "regex": "^/photographers(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/photographers(?:/)?$"
+    },
+    {
       "page": "/profile",
       "regex": "^/profile(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/profile(?:/)?$"
+    },
+    {
+      "page": "/tags",
+      "regex": "^/tags(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/tags(?:/)?$"
     }
   ],
   "dataRoutes": [],

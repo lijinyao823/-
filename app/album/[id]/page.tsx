@@ -48,7 +48,10 @@ export default function AlbumPage() {
               .from('photos')
               .select('*')
               .in('id', photoIds);
-            setPhotos(photosData || []);
+            const ordered = photoIds
+              .map((pid: string) => photosData?.find((p: any) => p.id === pid))
+              .filter(Boolean);
+            setPhotos(ordered);
           }
         }
       } finally {
@@ -64,7 +67,11 @@ export default function AlbumPage() {
       await supabase.from('album_photos').delete()
         .eq('album_id', id)
         .eq('photo_id', photoId);
-      setPhotos(prev => prev.filter(p => p.id !== photoId));
+      setPhotos(prev => {
+        const next = prev.filter(p => p.id !== photoId);
+        if (next.length === 0) setManageMode(false);
+        return next;
+      });
     } finally {
       setRemoving(null);
     }
