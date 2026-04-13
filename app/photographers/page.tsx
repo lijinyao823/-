@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
-import { Loader2, Camera, Heart, Users, UserPlus, UserCheck } from 'lucide-react';
+import { Loader2, Camera } from 'lucide-react';
+import PhotographerCard from '@/components/photographers/PhotographerCard';
 
 type SortKey = 'likes' | 'followers' | 'works' | 'newest';
 
@@ -40,13 +41,9 @@ export default function PhotographersPage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setCurrentUser(user);
       if (user) {
-        supabase
-          .from('follows')
-          .select('following_id')
-          .eq('follower_id', user.id)
-          .then(({ data }) => {
-            if (data) setFollowingIds(new Set(data.map((f: any) => f.following_id)));
-          });
+        supabase.from('follows').select('following_id').eq('follower_id', user.id).then(({ data }) => {
+          if (data) setFollowingIds(new Set(data.map((f: any) => f.following_id)));
+        });
       }
     });
     load();
@@ -55,41 +52,18 @@ export default function PhotographersPage() {
   async function load() {
     setLoading(true);
     try {
-      const { data: profiles } = await supabase
-        .from('user_profiles')
-        .select('user_id, username, bio, avatar_url, college, grade, created_at');
-
+      const { data: profiles } = await supabase.from('user_profiles').select('user_id, username, bio, avatar_url, college, grade, created_at');
       if (!profiles || profiles.length === 0) { setPhotographers([]); return; }
 
       const enriched: Photographer[] = await Promise.all(
         profiles.map(async (p: any) => {
-          const { data: photos } = await supabase
-            .from('photos')
-            .select('likes_count')
-            .eq('user_id', p.user_id);
+          const { data: photos } = await supabase.from('photos').select('likes_count').eq('user_id', p.user_id);
           const worksCount = photos?.length ?? 0;
           const totalLikes = (photos ?? []).reduce((s: number, ph: any) => s + (ph.likes_count || 0), 0);
-
-          const { count: followerCount } = await supabase
-            .from('follows')
-            .select('id', { count: 'exact', head: true })
-            .eq('following_id', p.user_id);
-
-          return {
-            user_id: p.user_id,
-            username: p.username,
-            bio: p.bio,
-            avatar_url: p.avatar_url,
-            college: p.college,
-            grade: p.grade,
-            worksCount,
-            totalLikes,
-            followerCount: followerCount ?? 0,
-            createdAt: p.created_at,
-          };
+          const { count: followerCount } = await supabase.from('follows').select('id', { count: 'exact', head: true }).eq('following_id', p.user_id);
+          return { user_id: p.user_id, username: p.username, bio: p.bio, avatar_url: p.avatar_url, college: p.college, grade: p.grade, worksCount, totalLikes, followerCount: followerCount ?? 0, createdAt: p.created_at };
         })
       );
-
       setPhotographers(enriched);
     } finally {
       setLoading(false);
@@ -110,26 +84,17 @@ export default function PhotographersPage() {
     e.stopPropagation();
     if (!currentUser) { router.push('/login'); return; }
     if (currentUser.id === targetId || togglingId) return;
-
     setTogglingId(targetId);
     try {
       if (followingIds.has(targetId)) {
-        await supabase.from('follows').delete()
-          .eq('follower_id', currentUser.id)
-          .eq('following_id', targetId);
+        await supabase.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', targetId);
         setFollowingIds(prev => { const s = new Set(prev); s.delete(targetId); return s; });
         setPhotographers(prev => prev.map(p => p.user_id === targetId ? { ...p, followerCount: p.followerCount - 1 } : p));
       } else {
         await supabase.from('follows').insert([{ follower_id: currentUser.id, following_id: targetId }]);
         setFollowingIds(prev => new Set([...prev, targetId]));
         setPhotographers(prev => prev.map(p => p.user_id === targetId ? { ...p, followerCount: p.followerCount + 1 } : p));
-        try {
-          await supabase.from('notifications').insert([{
-            user_id: targetId,
-            type: 'follow',
-            actor_name: currentUser.email?.split('@')[0] || '某用户',
-          }]);
-        } catch {}
+        try { await supabase.from('notifications').insert([{ user_id: targetId, type: 'follow', actor_name: currentUser.email?.split('@')[0] || '某用户' }]); } catch {}
       }
     } finally {
       setTogglingId(null);
@@ -147,7 +112,6 @@ export default function PhotographersPage() {
           <p className="text-gray-500">发现校园里的优秀摄影师</p>
         </div>
 
-        {/* Sort tabs */}
         <div className="flex gap-2 mb-8 flex-wrap">
           {SORT_OPTIONS.map(opt => (
             <button
@@ -168,70 +132,17 @@ export default function PhotographersPage() {
           <p className="text-center py-20 text-gray-400">暂无摄影师数据</p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sorted.map(p => {
-              const isFollowing = followingIds.has(p.user_id);
-              const isSelf = currentUser?.id === p.user_id;
-              return (
-                <div
-                  key={p.user_id}
-                  onClick={() => router.push(`/user/${p.user_id}`)}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 cursor-pointer hover:shadow-md transition-shadow group"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xl overflow-hidden flex-shrink-0">
-                      {p.avatar_url ? (
-                        <img src={p.avatar_url} alt={p.username} className="w-full h-full object-cover" />
-                      ) : (
-                        (p.username || '?')[0]
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate">{p.username || '摄影师'}</h3>
-                      {(p.college || p.grade) && (
-                        <p className="text-xs text-gray-400 mt-0.5">{[p.college, p.grade].filter(Boolean).join(' · ')}</p>
-                      )}
-                      {p.bio && (
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{p.bio}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 mt-4 pt-4 border-t border-gray-50">
-                    <div className="flex items-center gap-1.5 text-gray-500">
-                      <Camera size={13} className="text-blue-400" />
-                      <span className="text-xs font-bold">{p.worksCount}</span>
-                      <span className="text-xs text-gray-400">作品</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-gray-500">
-                      <Heart size={13} className="text-red-400" />
-                      <span className="text-xs font-bold">{p.totalLikes}</span>
-                      <span className="text-xs text-gray-400">获赞</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-gray-500">
-                      <Users size={13} className="text-indigo-400" />
-                      <span className="text-xs font-bold">{p.followerCount}</span>
-                      <span className="text-xs text-gray-400">粉丝</span>
-                    </div>
-                  </div>
-
-                  {!isSelf && (
-                    <button
-                      onClick={(e) => handleFollow(e, p.user_id)}
-                      disabled={togglingId === p.user_id}
-                      className={`mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-bold transition-all ${isFollowing ? 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-500' : 'bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white'}`}
-                    >
-                      {togglingId === p.user_id ? (
-                        <Loader2 className="animate-spin" size={14} />
-                      ) : isFollowing ? (
-                        <><UserCheck size={14} />已关注</>
-                      ) : (
-                        <><UserPlus size={14} />关注</>
-                      )}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+            {sorted.map(p => (
+              <PhotographerCard
+                key={p.user_id}
+                photographer={p}
+                isFollowing={followingIds.has(p.user_id)}
+                isSelf={currentUser?.id === p.user_id}
+                togglingId={togglingId}
+                onFollow={handleFollow}
+                onClick={() => router.push(`/user/${p.user_id}`)}
+              />
+            ))}
           </div>
         )}
       </div>
