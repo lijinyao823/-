@@ -5,11 +5,11 @@ import { motion } from 'motion/react';
 import { Loader2, PlusCircle, Search } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import PhotoGrid from '@/components/PhotoGrid';
-import GalleryHeader from '@/components/GalleryHeader';
-import LiquidButton from '@/components/LiquidButton';
-import UploadModal from '@/components/UploadModal';
-import FeaturedCarousel from '@/components/FeaturedCarousel';
+import PhotoGrid from '@/components/gallery/PhotoGrid';
+import GalleryHeader from '@/components/layout/GalleryHeader';
+import LiquidButton from '@/components/ui/LiquidButton';
+import UploadModal from '@/components/modals/UploadModal';
+import FeaturedCarousel from '@/components/gallery/FeaturedCarousel';
 import { SortOption, LocationFilter } from '@/types';
 
 const PAGE_SIZE = 12;

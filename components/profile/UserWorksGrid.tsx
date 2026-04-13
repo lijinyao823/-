@@ -6,8 +6,8 @@ import { Grid, Trash2, Heart, Loader2, FolderOpen, Pencil, FolderPlus } from 'lu
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import AlbumManager from '@/components/profile/AlbumManager';
-import EditPhotoModal from '@/components/EditPhotoModal';
-import AddToAlbumModal from '@/components/AddToAlbumModal';
+import EditPhotoModal from '@/components/modals/EditPhotoModal';
+import AddToAlbumModal from '@/components/modals/AddToAlbumModal';
 
 export default function UserWorksGrid() {
   const [activeTab, setActiveTab] = useState<'works' | 'likes' | 'albums'>('works');

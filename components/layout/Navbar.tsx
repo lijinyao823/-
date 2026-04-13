@@ -7,7 +7,7 @@ import { Camera, Search, User, PlusCircle, LogOut, Trophy, Bell, MessageSquare, 
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { supabase } from '@/lib/supabase';
-import NotificationDropdown from '@/components/NotificationDropdown';
+import NotificationDropdown from '@/components/layout/NotificationDropdown';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
