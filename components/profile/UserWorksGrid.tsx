@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'motion/react';
-import { Grid, Trash2, Heart, Loader2, FolderOpen, Pencil, FolderPlus } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import AlbumManager from '@/components/profile/AlbumManager';
 import EditPhotoModal from '@/components/modals/EditPhotoModal';
 import AddToAlbumModal from '@/components/modals/AddToAlbumModal';
+import WorkPhotoCard from '@/components/profile/WorkPhotoCard';
+import WorksTabBar from '@/components/profile/WorksTabBar';
 
 export default function UserWorksGrid() {
   const [activeTab, setActiveTab] = useState<'works' | 'likes' | 'albums'>('works');
@@ -22,23 +23,13 @@ export default function UserWorksGrid() {
   const loadData = useCallback(async (user: any) => {
     setLoading(true);
     try {
-      const { data: myWorks } = await supabase
-        .from('photos')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const { data: myWorks } = await supabase.from('photos').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
       setWorks(myWorks || []);
 
-      const { data: likesData } = await supabase
-        .from('likes')
-        .select('photo_id')
-        .eq('user_id', user.id);
+      const { data: likesData } = await supabase.from('likes').select('photo_id').eq('user_id', user.id);
       if (likesData && likesData.length > 0) {
         const photoIds = likesData.map((l: any) => l.photo_id);
-        const { data: likedData } = await supabase
-          .from('photos')
-          .select('*')
-          .in('id', photoIds);
+        const { data: likedData } = await supabase.from('photos').select('*').in('id', photoIds);
         setLikedPhotos(likedData || []);
       } else {
         setLikedPhotos([]);
@@ -57,7 +48,6 @@ export default function UserWorksGrid() {
 
   const handleDelete = async (photo: any) => {
     if (!confirm(`确定删除"${photo.title}"吗？此操作不可撤销。`)) return;
-
     if (photo.image_url) {
       try {
         const urlParts = photo.image_url.split('/');
@@ -66,11 +56,8 @@ export default function UserWorksGrid() {
           const storagePath = urlParts.slice(storagePathIndex + 1).join('/');
           await supabase.storage.from('gallery').remove([storagePath]);
         }
-      } catch {
-        // ignore storage delete errors
-      }
+      } catch {}
     }
-
     await supabase.from('photos').delete().eq('id', photo.id).eq('user_id', currentUser.id);
     setWorks(prev => prev.filter(w => w.id !== photo.id));
   };
@@ -79,28 +66,13 @@ export default function UserWorksGrid() {
 
   return (
     <div className="space-y-8">
-      {/* Tabs */}
-      <div className="flex gap-8 border-b border-gray-100">
-        {[
-          { id: 'works', label: `我的作品 (${works.length})` },
-          { id: 'likes', label: `赞过的 (${likedPhotos.length})` },
-          { id: 'albums', label: '相册' },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id as any)}
-            className={`pb-4 text-sm font-bold transition-all relative flex items-center gap-1 ${activeTab === tab.id ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
-          >
-            {tab.id === 'albums' && <FolderOpen size={14} />}
-            {tab.label}
-            {activeTab === tab.id && (
-              <motion.div layoutId="profileTab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-full" />
-            )}
-          </button>
-        ))}
-      </div>
+      <WorksTabBar
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        worksCount={works.length}
+        likesCount={likedPhotos.length}
+      />
 
-      {/* Albums tab */}
       {activeTab === 'albums' ? (
         <AlbumManager userId={currentUser?.id} userPhotos={works} />
       ) : (
@@ -116,66 +88,15 @@ export default function UserWorksGrid() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {displayPhotos.map((photo) => (
-                <motion.div
+                <WorkPhotoCard
                   key={photo.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-2xl overflow-hidden shadow-sm group border border-gray-100"
-                >
-                  <div className="aspect-video relative overflow-hidden">
-                    <img
-                      src={photo.image_url || photo.url}
-                      alt={photo.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                      <button
-                        onClick={() => router.push(`/photo/${photo.id}`)}
-                        className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"
-                        title="查看"
-                      >
-                        <Grid size={18} />
-                      </button>
-                      <button
-                        onClick={() => setAlbumPhotoId(photo.id)}
-                        className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"
-                        title="加入相册"
-                      >
-                        <FolderPlus size={18} />
-                      </button>
-                      {activeTab === 'works' && (
-                        <>
-                          <button
-                            onClick={() => setEditingPhoto(photo)}
-                            className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"
-                            title="编辑"
-                          >
-                            <Pencil size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(photo)}
-                            className="p-3 bg-red-500/80 backdrop-blur-md rounded-full text-white hover:bg-red-600"
-                            title="删除"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="p-4 flex justify-between items-center">
-                    <div>
-                      <h4 className="font-bold text-gray-900 text-sm">{photo.title}</h4>
-                      <p className="text-[10px] text-gray-400">
-                        {photo.created_at ? new Date(photo.created_at).toLocaleDateString('zh-CN') : ''}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1 text-blue-600">
-                      <Heart size={12} className="fill-current" />
-                      <span className="text-xs font-bold">{photo.likes_count || 0}</span>
-                    </div>
-                  </div>
-                </motion.div>
+                  photo={photo}
+                  isOwner={activeTab === 'works'}
+                  onView={() => router.push(`/photo/${photo.id}`)}
+                  onEdit={() => setEditingPhoto(photo)}
+                  onDelete={() => handleDelete(photo)}
+                  onAddToAlbum={() => setAlbumPhotoId(photo.id)}
+                />
               ))}
             </div>
           )}
@@ -198,4 +119,3 @@ export default function UserWorksGrid() {
     </div>
   );
 }
-
