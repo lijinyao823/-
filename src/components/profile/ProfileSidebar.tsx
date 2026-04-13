@@ -1,10 +1,39 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Award, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 
 export default function ProfileSidebar() {
+  const navigate = useNavigate();
+  const [followings, setFollowings] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // 获取关注的人的信息
+      const { data: followData } = await supabase
+        .from('follows')
+        .select('following_id')
+        .eq('follower_id', user.id)
+        .limit(8);
+
+      if (followData && followData.length > 0) {
+        const ids = followData.map((f: any) => f.following_id);
+        const { data: profiles } = await supabase
+          .from('user_profiles')
+          .select('user_id, username')
+          .in('user_id', ids);
+        setFollowings(profiles || []);
+      }
+    }
+    load();
+  }, []);
+
   const achievements = [
     { icon: '🏆', title: '年度十佳摄影师', color: 'bg-yellow-100 text-yellow-600' },
-    { icon: '📸', title: '光影达人', color: 'bg-blue-100 text-blue-600' }
+    { icon: '📸', title: '光影达人', color: 'bg-blue-100 text-blue-600' },
   ];
 
   return (
@@ -29,15 +58,23 @@ export default function ProfileSidebar() {
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
           <Users size={18} className="text-blue-600" />
-          <span>关注小组</span>
+          <span>我的关注</span>
         </h3>
-        <div className="flex flex-wrap gap-2">
-          {['南湖摄影社', '鉴湖航拍组', '马房山人文', '武理校友会'].map(tag => (
-            <span key={tag} className="px-3 py-1 bg-gray-100 rounded-full text-[10px] font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors">
-              #{tag}
-            </span>
-          ))}
-        </div>
+        {followings.length === 0 ? (
+          <p className="text-xs text-gray-400">还没有关注任何摄影师，去探索画廊发现你喜欢的作者吧！</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {followings.map(f => (
+              <button
+                key={f.user_id}
+                onClick={() => navigate(`/user/${f.user_id}`)}
+                className="px-3 py-1 bg-gray-100 rounded-full text-[10px] font-medium text-gray-500 hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors"
+              >
+                @{f.username || '摄影师'}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
