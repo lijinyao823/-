@@ -8,7 +8,7 @@ interface Props {
   onSuccess: () => void;
 }
 
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/tiff'];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_SIZE_MB = 20;
 const CATEGORIES = [
   { id: 'scenery', label: '风光' },
@@ -16,6 +16,19 @@ const CATEGORIES = [
   { id: 'activity', label: '活动' },
 ];
 const LOCATIONS = ['南湖校区', '马房山校区', '余家头校区', '其他'];
+
+/** 只允许 blob: 和 https: 的 URL 用作 img src，防止 XSS */
+function sanitizeImageSrc(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'blob:' || parsed.protocol === 'https:') {
+      return url;
+    }
+  } catch {
+    // invalid URL
+  }
+  return '';
+}
 
 export default function UploadModal({ isOpen, onClose, onSuccess }: Props) {
   const [file, setFile] = useState<File | null>(null);
@@ -197,7 +210,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: Props) {
               onDrop={handleDrop}
             >
               {preview ? (
-                <img src={preview} alt="预览" className="w-full h-full object-cover" />
+                <img src={sanitizeImageSrc(preview)} alt="预览" className="w-full h-full object-cover" />
               ) : (
                 <div className="flex flex-col items-center text-slate-400">
                   <Upload size={32} className="mb-2 group-hover:-translate-y-1 transition-transform" />

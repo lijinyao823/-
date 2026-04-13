@@ -32,6 +32,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(0);
+  const pageRef = useRef(0);
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
@@ -39,7 +40,7 @@ export default function Home() {
   const fetchPhotos = useCallback(async (reset = false) => {
     setLoading(true);
     try {
-      const currentPage = reset ? 0 : page;
+      const currentPage = reset ? 0 : pageRef.current;
       let query = supabase
         .from('photos')
         .select('*')
@@ -68,9 +69,11 @@ export default function Home() {
       const newPhotos = data || [];
       if (reset) {
         setAllPhotos(newPhotos);
+        pageRef.current = 1;
         setPage(1);
       } else {
         setAllPhotos(prev => [...prev, ...newPhotos]);
+        pageRef.current += 1;
         setPage(p => p + 1);
       }
       setHasMore(newPhotos.length === PAGE_SIZE);
@@ -79,15 +82,15 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [filter, sort, location, searchQuery, page]);
+  }, [filter, sort, location, searchQuery]); // 移除 page 依赖，使用 pageRef 避免无限循环
 
   // 当筛选条件变化时重置
   useEffect(() => {
+    pageRef.current = 0;
     setPage(0);
     setHasMore(true);
     fetchPhotos(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, sort, location, searchQuery]);
+  }, [filter, sort, location, searchQuery, fetchPhotos]);
 
   // Intersection Observer 实现无限滚动
   const sentinelRef = useRef<HTMLDivElement>(null);

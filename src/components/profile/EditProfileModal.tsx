@@ -9,6 +9,26 @@ interface Props {
   onSuccess: (updated: any) => void;
 }
 
+/** 只允许 blob: 和 https: 的 URL 用作 img src，防止 XSS */
+function sanitizeImageSrc(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'blob:' || parsed.protocol === 'https:') {
+      return url;
+    }
+  } catch {
+    // invalid URL
+  }
+  return '';
+}
+
+interface Props {
+  profile: any;
+  userId: string;
+  onClose: () => void;
+  onSuccess: (updated: any) => void;
+}
+
 export default function EditProfileModal({ profile, userId, onClose, onSuccess }: Props) {
   const [username, setUsername] = useState(profile?.username || '');
   const [bio, setBio] = useState(profile?.bio || '');
@@ -83,7 +103,7 @@ export default function EditProfileModal({ profile, userId, onClose, onSuccess }
           <div className="flex flex-col items-center gap-3">
             <div className="w-20 h-20 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center text-blue-600 text-2xl font-bold">
               {avatarPreview ? (
-                <img src={avatarPreview} alt="avatar" className="w-full h-full object-cover" />
+                <img src={sanitizeImageSrc(avatarPreview)} alt="avatar" className="w-full h-full object-cover" />
               ) : (
                 username[0] || '?'
               )}

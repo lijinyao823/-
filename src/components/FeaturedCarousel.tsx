@@ -16,7 +16,11 @@ export default function FeaturedCarousel() {
         .limit(5);
 
       if (data && data.length > 0) {
-        setImages(data.map(p => p.image_url || p.url).filter(Boolean));
+        setImages(
+          data
+            .map((p: any) => p.image_url || p.url)
+            .filter((url: unknown): url is string => typeof url === 'string' && url.length > 0)
+        );
       }
     }
     load();

@@ -47,12 +47,16 @@ export default function PhotoGrid({ photos }: PhotoGridProps) {
                 <div className="p-4 bg-white">
                   <h3 className="font-bold text-gray-800 truncate">{photo.title}</h3>
                   <div className="flex items-center justify-between mt-1">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/user/${photo.user_id}`); }}
-                      className="text-xs text-gray-400 hover:text-blue-600 transition-colors"
-                    >
-                      {authorName}
-                    </button>
+                    {photo.user_id ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/user/${photo.user_id}`); }}
+                        className="text-xs text-gray-400 hover:text-blue-600 transition-colors"
+                      >
+                        {authorName}
+                      </button>
+                    ) : (
+                      <span className="text-xs text-gray-400">{authorName}</span>
+                    )}
                     <div className="flex items-center gap-1 text-gray-400">
                       <Heart size={12} />
                       <span className="text-xs">{likesCount}</span>

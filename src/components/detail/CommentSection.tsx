@@ -2,16 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Send, Trash2, CornerDownRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-
-interface Comment {
-  id: string;
-  user_id: string;
-  author: string;
-  content: string;
-  created_at: string;
-  parent_id: string | null;
-  replies?: Comment[];
-}
+import type { Comment } from '../../types';
 
 interface Props {
   photoId: string;
