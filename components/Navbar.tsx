@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Camera, Search, User, PlusCircle, LogOut, Trophy, Bell, MessageSquare } from 'lucide-react';
+import { Camera, Search, User, PlusCircle, LogOut, Trophy, Bell, MessageSquare, Hash, Users } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { supabase } from '@/lib/supabase';
@@ -42,13 +42,22 @@ function NavbarContent() {
       .eq('read', false)
       .then(({ count }) => setUnreadCount(count ?? 0));
 
-    // Count unread messages
+    // Count unread messages – only for conversations the current user participates in
     supabase
-      .from('messages')
-      .select('id', { count: 'exact', head: true })
-      .neq('sender_id', user.id)
-      .eq('read', false)
-      .then(({ count }) => setUnreadMessages(count ?? 0));
+      .from('conversations')
+      .select('id')
+      .or(`participant_a.eq.${user.id},participant_b.eq.${user.id}`)
+      .then(({ data: convs }) => {
+        if (!convs || convs.length === 0) { setUnreadMessages(0); return; }
+        const convIds = convs.map((c: any) => c.id);
+        supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .in('conversation_id', convIds)
+          .neq('sender_id', user.id)
+          .eq('read', false)
+          .then(({ count }) => setUnreadMessages(count ?? 0));
+      });
   }, [user]);
 
   const handleLogout = async () => {
@@ -90,6 +99,18 @@ function NavbarContent() {
             <Link href="/leaderboard" className={navLinkClass('/leaderboard')}>
               <Trophy size={14} />
               排行榜
+              <span className="absolute bottom-0 left-0 h-[2px] w-0 bg-blue-600 transition-all duration-300 group-hover:w-full" />
+            </Link>
+
+            <Link href="/tags" className={navLinkClass('/tags')}>
+              <Hash size={14} />
+              标签
+              <span className="absolute bottom-0 left-0 h-[2px] w-0 bg-blue-600 transition-all duration-300 group-hover:w-full" />
+            </Link>
+
+            <Link href="/photographers" className={navLinkClass('/photographers')}>
+              <Users size={14} />
+              摄影师
               <span className="absolute bottom-0 left-0 h-[2px] w-0 bg-blue-600 transition-all duration-300 group-hover:w-full" />
             </Link>
 

@@ -2,8 +2,44 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Camera, Heart, UserPlus, UserCheck, Loader2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Camera, Heart, UserPlus, UserCheck, Loader2, MessageSquare, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+
+function UserListModal({ title, users, onClose }: { title: string; users: any[]; onClose: () => void }) {
+  const router = useRouter();
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+          <h3 className="font-bold text-gray-900">{title}</h3>
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100">
+            <X size={18} />
+          </button>
+        </div>
+        <div className="p-4 max-h-80 overflow-y-auto space-y-2">
+          {users.length === 0 ? (
+            <p className="text-center text-sm text-gray-400 py-8">暂无数据</p>
+          ) : users.map((u: any) => (
+            <button
+              key={u.user_id}
+              onClick={() => { router.push(`/user/${u.user_id}`); onClose(); }}
+              className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors text-left"
+            >
+              <div className="w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden flex-shrink-0">
+                {u.avatar_url ? (
+                  <img src={u.avatar_url} alt={u.username} className="w-full h-full object-cover" />
+                ) : (
+                  (u.username || '?')[0]
+                )}
+              </div>
+              <span className="text-sm font-bold text-gray-800">@{u.username || '摄影师'}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
@@ -11,10 +47,13 @@ export default function UserProfile() {
 
   const [profile, setProfile] = useState<any>(null);
   const [photos, setPhotos] = useState<any[]>([]);
-  const [stats, setStats] = useState({ works: 0, likes: 0, followers: 0 });
+  const [stats, setStats] = useState({ works: 0, likes: 0, followers: 0, following: 0 });
   const [isFollowing, setIsFollowing] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [followerUsers, setFollowerUsers] = useState<any[]>([]);
+  const [followingUsers, setFollowingUsers] = useState<any[]>([]);
+  const [showModal, setShowModal] = useState<'followers' | 'following' | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => setCurrentUser(user));
@@ -40,11 +79,35 @@ export default function UserProfile() {
       setPhotos(photoList);
 
       const totalLikes = photoList.reduce((sum: number, p: any) => sum + (p.likes_count || 0), 0);
+
       const { count: followersCount } = await supabase
         .from('follows')
         .select('id', { count: 'exact', head: true })
         .eq('following_id', userId);
-      setStats({ works: photoList.length, likes: totalLikes, followers: followersCount || 0 });
+
+      const { count: followingCount } = await supabase
+        .from('follows')
+        .select('id', { count: 'exact', head: true })
+        .eq('follower_id', userId);
+
+      setStats({ works: photoList.length, likes: totalLikes, followers: followersCount || 0, following: followingCount || 0 });
+
+      // Load follower/following user profiles
+      const [{ data: followerData }, { data: followingData }] = await Promise.all([
+        supabase.from('follows').select('follower_id').eq('following_id', userId),
+        supabase.from('follows').select('following_id').eq('follower_id', userId),
+      ]);
+
+      if (followerData && followerData.length > 0) {
+        const ids = followerData.map((f: any) => f.follower_id);
+        const { data: profiles } = await supabase.from('user_profiles').select('user_id, username, avatar_url').in('user_id', ids);
+        setFollowerUsers(profiles || []);
+      }
+      if (followingData && followingData.length > 0) {
+        const ids = followingData.map((f: any) => f.following_id);
+        const { data: profiles } = await supabase.from('user_profiles').select('user_id, username, avatar_url').in('user_id', ids);
+        setFollowingUsers(profiles || []);
+      }
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -180,11 +243,16 @@ export default function UserProfile() {
 
           <div className="flex gap-8 mt-6 pt-6 border-t border-gray-100">
             {[
-              { label: '作品', value: stats.works },
-              { label: '获赞', value: stats.likes },
-              { label: '粉丝', value: stats.followers },
+              { label: '作品', value: stats.works, onClick: undefined },
+              { label: '获赞', value: stats.likes, onClick: undefined },
+              { label: '粉丝', value: stats.followers, onClick: () => setShowModal('followers') },
+              { label: '关注', value: stats.following, onClick: () => setShowModal('following') },
             ].map(s => (
-              <div key={s.label} className="text-center">
+              <div
+                key={s.label}
+                className={`text-center ${s.onClick ? 'cursor-pointer hover:opacity-70 transition-opacity' : ''}`}
+                onClick={s.onClick}
+              >
                 <p className="text-xl font-bold text-gray-900">{s.value}</p>
                 <p className="text-[10px] text-gray-400 uppercase tracking-widest">{s.label}</p>
               </div>
@@ -227,6 +295,22 @@ export default function UserProfile() {
           )}
         </div>
       </div>
+
+      {showModal === 'followers' && (
+        <UserListModal
+          title={`粉丝 (${stats.followers})`}
+          users={followerUsers}
+          onClose={() => setShowModal(null)}
+        />
+      )}
+      {showModal === 'following' && (
+        <UserListModal
+          title={`关注 (${stats.following})`}
+          users={followingUsers}
+          onClose={() => setShowModal(null)}
+        />
+      )}
     </div>
   );
 }
+
