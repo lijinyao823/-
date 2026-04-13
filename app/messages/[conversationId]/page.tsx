@@ -12,6 +12,7 @@ export default function ConversationPage() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const currentUserRef = useRef<any>(null);
   const [otherUser, setOtherUser] = useState<any>(null);
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -20,6 +21,7 @@ export default function ConversationPage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) { router.push('/login'); return; }
       setCurrentUser(session.user);
+      currentUserRef.current = session.user;
       loadData(session.user.id);
     });
   }, [router, conversationId]);
@@ -60,7 +62,7 @@ export default function ConversationPage() {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
 
     // Mark messages from the other user as read
-    const uid = userId ?? currentUser?.id;
+    const uid = userId ?? currentUserRef.current?.id;
     if (uid) {
       await supabase
         .from('messages')

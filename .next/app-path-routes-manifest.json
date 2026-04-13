@@ -1,13 +1,15 @@
 {
   "/_not-found/page": "/_not-found",
-  "/album/[id]/page": "/album/[id]",
   "/leaderboard/page": "/leaderboard",
   "/login/page": "/login",
   "/messages/[conversationId]/page": "/messages/[conversationId]",
+  "/album/[id]/page": "/album/[id]",
   "/messages/page": "/messages",
+  "/photographers/page": "/photographers",
   "/page": "/",
+  "/photo/[id]/page": "/photo/[id]",
   "/profile/page": "/profile",
   "/tag/[name]/page": "/tag/[name]",
-  "/photo/[id]/page": "/photo/[id]",
+  "/tags/page": "/tags",
   "/user/[userId]/page": "/user/[userId]"
 }

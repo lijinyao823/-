@@ -48,7 +48,10 @@ export default function AlbumPage() {
               .from('photos')
               .select('*')
               .in('id', photoIds);
-            setPhotos(photosData || []);
+            const ordered = photoIds
+              .map((pid: string) => photosData?.find((p: any) => p.id === pid))
+              .filter(Boolean);
+            setPhotos(ordered);
           }
         }
       } finally {

@@ -53,6 +53,11 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: Props) {
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    files.forEach(f => URL.revokeObjectURL(f.preview));
+    onClose();
+  };
+
   const validateFile = (f: File): string => {
     if (!ALLOWED_TYPES.includes(f.type)) {
       return `不支持的文件格式（${f.type}），请上传 JPG/PNG/WEBP`;
@@ -92,6 +97,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: Props) {
   }, []);
 
   const removeFile = (index: number) => {
+    URL.revokeObjectURL(files[index].preview);
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
 
@@ -199,6 +205,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: Props) {
       }
 
       // Reset
+      files.forEach(f => URL.revokeObjectURL(f.preview));
       setFiles([]);
       setDescription('');
       setCategory('scenery');
@@ -236,7 +243,7 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: Props) {
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b flex justify-between items-center bg-slate-50 sticky top-0">
           <h3 className="font-bold text-slate-800 text-lg">分享新光影</h3>
-          <button onClick={onClose} className="p-1 hover:bg-slate-200 rounded-full transition-colors">
+          <button onClick={handleClose} className="p-1 hover:bg-slate-200 rounded-full transition-colors">
             <X size={20} />
           </button>
         </div>

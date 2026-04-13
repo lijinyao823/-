@@ -35,6 +35,24 @@ function NavbarContent() {
 
   useEffect(() => {
     if (!user) { setUnreadCount(0); setUnreadMessages(0); return; }
+
+    const fetchUnreadMessages = () =>
+      supabase
+        .from('conversations')
+        .select('id')
+        .or(`participant_a.eq.${user.id},participant_b.eq.${user.id}`)
+        .then(({ data: convs }) => {
+          if (!convs || convs.length === 0) { setUnreadMessages(0); return; }
+          const convIds = convs.map((c: any) => c.id);
+          supabase
+            .from('messages')
+            .select('id', { count: 'exact', head: true })
+            .in('conversation_id', convIds)
+            .neq('sender_id', user.id)
+            .eq('read', false)
+            .then(({ count }) => setUnreadMessages(count ?? 0));
+        });
+
     supabase
       .from('notifications')
       .select('id', { count: 'exact', head: true })
@@ -42,22 +60,21 @@ function NavbarContent() {
       .eq('read', false)
       .then(({ count }) => setUnreadCount(count ?? 0));
 
-    // Count unread messages – only for conversations the current user participates in
-    supabase
-      .from('conversations')
-      .select('id')
-      .or(`participant_a.eq.${user.id},participant_b.eq.${user.id}`)
-      .then(({ data: convs }) => {
-        if (!convs || convs.length === 0) { setUnreadMessages(0); return; }
-        const convIds = convs.map((c: any) => c.id);
-        supabase
-          .from('messages')
-          .select('id', { count: 'exact', head: true })
-          .in('conversation_id', convIds)
-          .neq('sender_id', user.id)
-          .eq('read', false)
-          .then(({ count }) => setUnreadMessages(count ?? 0));
-      });
+    fetchUnreadMessages();
+
+    const channel = supabase
+      .channel(`navbar-messages-${user.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
+        (payload) => {
+          if (payload.new.sender_id !== user.id && !payload.new.read) {
+            setUnreadMessages(n => n + 1);
+          }
+        })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' },
+        () => { fetchUnreadMessages(); })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   const handleLogout = async () => {
