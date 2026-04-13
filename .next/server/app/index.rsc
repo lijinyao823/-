@@ -1,10 +1,22 @@
-2:I[9107,[],"ClientPageRoot"]
-3:I[5767,["762","static/chunks/44530001-720cbbcfa0594267.js","375","static/chunks/375-1f91d7199a27203a.js","591","static/chunks/591-b2c016442d498b7c.js","596","static/chunks/596-e8b27e24bbe3914d.js","466","static/chunks/466-eed4ed53b08b7ec2.js","931","static/chunks/app/page-21e580eff273f142.js"],"default",1]
-4:I[4985,["762","static/chunks/44530001-720cbbcfa0594267.js","375","static/chunks/375-1f91d7199a27203a.js","648","static/chunks/648-f6d1fe1e15dba17c.js","207","static/chunks/207-e5a232a8a0dc55a2.js","185","static/chunks/app/layout-5de020fc918c6c68.js"],"default"]
-5:I[4707,[],""]
-6:I[6423,[],""]
-7:I[5447,["648","static/chunks/648-f6d1fe1e15dba17c.js","160","static/chunks/app/not-found-809d50c5df91bf37.js"],"default"]
-8:I[8349,["762","static/chunks/44530001-720cbbcfa0594267.js","375","static/chunks/375-1f91d7199a27203a.js","648","static/chunks/648-f6d1fe1e15dba17c.js","207","static/chunks/207-e5a232a8a0dc55a2.js","185","static/chunks/app/layout-5de020fc918c6c68.js"],"default"]
-0:["9sNPDXYF3jSx1dNpN9Iux",[[["",{"children":["__PAGE__",{}]},"$undefined","$undefined",true],["",{"children":["__PAGE__",{},[["$L1",["$","$L2",null,{"props":{"params":{},"searchParams":{}},"Component":"$3"}],null],null],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/43e7ccfabd3b2aff.css","precedence":"next","crossOrigin":"$undefined"}]],["$","html",null,{"lang":"zh","children":["$","body",null,{"children":["$","div",null,{"className":"flex flex-col min-h-screen font-sans bg-slate-50 selection:bg-blue-100","children":[["$","$L4",null,{}],["$","main",null,{"className":"flex-grow w-full","children":["$","$L5",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L6",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":["$","$L7",null,{}],"notFoundStyles":[]}]}],["$","$L8",null,{}]]}]}]}]],null],null],["$L9",null]]]]
-9:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"理工光影 - 武汉理工大学校园摄影平台"}],["$","meta","3",{"name":"description","content":"武汉理工大学校园摄影展示平台"}]]
-1:null
+1:"$Sreact.fragment"
+2:I[1100,["730","static/chunks/44530001-2a95bb40d7cb4c97.js","800","static/chunks/800-d134cdcc3dd34925.js","619","static/chunks/619-ba102abea3e3d0e4.js","706","static/chunks/706-c7d7f56422ee84b3.js","177","static/chunks/app/layout-3bdebbb799bbf68a.js"],"default"]
+3:I[9766,[],""]
+4:I[8924,[],""]
+5:I[3293,["619","static/chunks/619-ba102abea3e3d0e4.js","345","static/chunks/app/not-found-5cc48adfc1f1a392.js"],"default"]
+6:I[8743,["730","static/chunks/44530001-2a95bb40d7cb4c97.js","800","static/chunks/800-d134cdcc3dd34925.js","619","static/chunks/619-ba102abea3e3d0e4.js","706","static/chunks/706-c7d7f56422ee84b3.js","177","static/chunks/app/layout-3bdebbb799bbf68a.js"],"default"]
+7:I[1959,[],"ClientPageRoot"]
+8:I[5546,["730","static/chunks/44530001-2a95bb40d7cb4c97.js","800","static/chunks/800-d134cdcc3dd34925.js","678","static/chunks/678-1ac837b78fdd36da.js","805","static/chunks/805-9caccfdef1ff4675.js","88","static/chunks/88-dc2f0594e8c5a950.js","974","static/chunks/app/page-d18fef3f1419cacd.js"],"default"]
+b:I[4431,[],"OutletBoundary"]
+d:I[5278,[],"AsyncMetadataOutlet"]
+f:I[4431,[],"ViewportBoundary"]
+11:I[4431,[],"MetadataBoundary"]
+12:"$Sreact.suspense"
+14:I[7150,[],""]
+:HL["/_next/static/css/4a389f2cb2e705bc.css","style"]
+0:{"P":null,"b":"MPUuHrFoB8P6n6ctp0Ync","p":"","c":["",""],"i":false,"f":[[["",{"children":["__PAGE__",{}]},"$undefined","$undefined",true],["",["$","$1","c",{"children":[[["$","link","0",{"rel":"stylesheet","href":"/_next/static/css/4a389f2cb2e705bc.css","precedence":"next","crossOrigin":"$undefined","nonce":"$undefined"}]],["$","html",null,{"lang":"zh","children":["$","body",null,{"children":["$","div",null,{"className":"flex flex-col min-h-screen font-sans bg-slate-50 selection:bg-blue-100","children":[["$","$L2",null,{}],["$","main",null,{"className":"flex-grow w-full","children":["$","$L3",null,{"parallelRouterKey":"children","error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L4",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","$L5",null,{}],[]],"forbidden":"$undefined","unauthorized":"$undefined"}]}],["$","$L6",null,{}]]}]}]}]]}],{"children":["__PAGE__",["$","$1","c",{"children":[["$","$L7",null,{"Component":"$8","searchParams":{},"params":{},"promises":["$@9","$@a"]}],null,["$","$Lb",null,{"children":["$Lc",["$","$Ld",null,{"promise":"$@e"}]]}]]}],{},null,false]},null,false],["$","$1","h",{"children":[null,[["$","$Lf",null,{"children":"$L10"}],null],["$","$L11",null,{"children":["$","div",null,{"hidden":true,"children":["$","$12",null,{"fallback":null,"children":"$L13"}]}]}]]}],false]],"m":"$undefined","G":["$14",[]],"s":false,"S":true}
+9:{}
+a:"$0:f:0:1:2:children:1:props:children:0:props:params"
+10:[["$","meta","0",{"charSet":"utf-8"}],["$","meta","1",{"name":"viewport","content":"width=device-width, initial-scale=1"}]]
+c:null
+e:{"metadata":[["$","title","0",{"children":"理工光影 - 武汉理工大学校园摄影平台"}],["$","meta","1",{"name":"description","content":"武汉理工大学校园摄影展示平台"}]],"error":null,"digest":"$undefined"}
+13:"$e:metadata"

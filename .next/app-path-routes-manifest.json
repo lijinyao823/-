@@ -1,1 +1,13 @@
-{"/_not-found/page":"/_not-found","/album/[id]/page":"/album/[id]","/login/page":"/login","/messages/[conversationId]/page":"/messages/[conversationId]","/leaderboard/page":"/leaderboard","/messages/page":"/messages","/page":"/","/photo/[id]/page":"/photo/[id]","/profile/page":"/profile","/tag/[name]/page":"/tag/[name]","/user/[userId]/page":"/user/[userId]"}
+{
+  "/_not-found/page": "/_not-found",
+  "/album/[id]/page": "/album/[id]",
+  "/leaderboard/page": "/leaderboard",
+  "/login/page": "/login",
+  "/messages/[conversationId]/page": "/messages/[conversationId]",
+  "/messages/page": "/messages",
+  "/page": "/",
+  "/profile/page": "/profile",
+  "/tag/[name]/page": "/tag/[name]",
+  "/photo/[id]/page": "/photo/[id]",
+  "/user/[userId]/page": "/user/[userId]"
+}
