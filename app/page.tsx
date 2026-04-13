@@ -22,8 +22,8 @@ const LOCATION_MAP: Record<LocationFilter, string> = {
 };
 
 function HomeContent() {
-  const [searchParams] = useSearchParams() as any;
-  const searchQuery = (typeof searchParams?.get === 'function' ? searchParams.get('q') : null) || '';
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams?.get('q') || '';
 
   const [feedTab, setFeedTab] = useState<'all' | 'following'>('all');
   const [filter, setFilter] = useState<'all' | 'scenery' | 'humanities' | 'activity'>('all');

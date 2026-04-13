@@ -44,13 +44,13 @@ export default function ConversationPage() {
         setOtherUser({ id: otherId, ...profile });
       }
 
-      await loadMessages();
+      await loadMessages(userId);
     } finally {
       setLoading(false);
     }
   }
 
-  async function loadMessages() {
+  async function loadMessages(userId?: string) {
     const { data } = await supabase
       .from('messages')
       .select('*')
@@ -58,6 +58,17 @@ export default function ConversationPage() {
       .order('created_at', { ascending: true });
     setMessages(data || []);
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+
+    // Mark messages from the other user as read
+    const uid = userId ?? currentUser?.id;
+    if (uid) {
+      await supabase
+        .from('messages')
+        .update({ read: true })
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', uid)
+        .eq('read', false);
+    }
   }
 
   useEffect(() => {
