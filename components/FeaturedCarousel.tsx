@@ -11,10 +11,12 @@ export default function FeaturedCarousel() {
 
   useEffect(() => {
     async function load() {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
       const { data } = await supabase
         .from('photos')
         .select('image_url, url')
-        .eq('featured', true)
+        .gte('created_at', thirtyDaysAgo)
+        .order('likes_count', { ascending: false })
         .limit(5);
 
       if (data && data.length > 0) {

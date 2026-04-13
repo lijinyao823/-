@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Info, MapPin, Calendar, Tag } from 'lucide-react';
+import { Info, MapPin, Calendar, Tag, FolderPlus } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import AddToAlbumModal from '@/components/AddToAlbumModal';
 
 export default function PhotoInfoSidebar({ photo }: { photo: any }) {
   const [photoTags, setPhotoTags] = useState<string[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showAlbumModal, setShowAlbumModal] = useState(false);
   const exif = photo.exif || {};
   const exifItems = [
     { label: '相机', value: exif.camera || '未知' },
@@ -21,6 +24,7 @@ export default function PhotoInfoSidebar({ photo }: { photo: any }) {
     : '未知';
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUser(user));
     async function loadTags() {
       const { data } = await supabase
         .from('photo_tags')
@@ -68,6 +72,19 @@ export default function PhotoInfoSidebar({ photo }: { photo: any }) {
 
         <p className="text-gray-600 text-sm leading-relaxed mb-6">{photo.description || '暂无描述'}</p>
 
+        {/* Add to Album button */}
+        {currentUser && (
+          <div className="mb-6">
+            <button
+              onClick={() => setShowAlbumModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl text-sm font-bold hover:bg-blue-100 transition-colors"
+            >
+              <FolderPlus size={16} />
+              加入相册
+            </button>
+          </div>
+        )}
+
         {/* Tags */}
         {photoTags.length > 0 && (
           <div className="mb-6">
@@ -111,6 +128,10 @@ export default function PhotoInfoSidebar({ photo }: { photo: any }) {
           作品版权归作者所有。未经授权，禁止任何形式的商业用途及二次创作。
         </p>
       </div>
+
+      {showAlbumModal && (
+        <AddToAlbumModal photoId={photo.id} onClose={() => setShowAlbumModal(false)} />
+      )}
     </div>
   );
 }

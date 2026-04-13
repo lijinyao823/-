@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { Grid, Trash2, Heart, Loader2, FolderOpen } from 'lucide-react';
+import { Grid, Trash2, Heart, Loader2, FolderOpen, Pencil, FolderPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import AlbumManager from '@/components/profile/AlbumManager';
+import EditPhotoModal from '@/components/EditPhotoModal';
+import AddToAlbumModal from '@/components/AddToAlbumModal';
 
 export default function UserWorksGrid() {
   const [activeTab, setActiveTab] = useState<'works' | 'likes' | 'albums'>('works');
@@ -13,6 +15,8 @@ export default function UserWorksGrid() {
   const [likedPhotos, setLikedPhotos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [editingPhoto, setEditingPhoto] = useState<any>(null);
+  const [albumPhotoId, setAlbumPhotoId] = useState<string | null>(null);
   const router = useRouter();
 
   const loadData = useCallback(async (user: any) => {
@@ -124,20 +128,38 @@ export default function UserWorksGrid() {
                       alt={photo.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                       <button
                         onClick={() => router.push(`/photo/${photo.id}`)}
                         className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"
+                        title="查看"
                       >
                         <Grid size={18} />
                       </button>
+                      <button
+                        onClick={() => setAlbumPhotoId(photo.id)}
+                        className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"
+                        title="加入相册"
+                      >
+                        <FolderPlus size={18} />
+                      </button>
                       {activeTab === 'works' && (
-                        <button
-                          onClick={() => handleDelete(photo)}
-                          className="p-3 bg-red-500/80 backdrop-blur-md rounded-full text-white hover:bg-red-600"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => setEditingPhoto(photo)}
+                            className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"
+                            title="编辑"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(photo)}
+                            className="p-3 bg-red-500/80 backdrop-blur-md rounded-full text-white hover:bg-red-600"
+                            title="删除"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -159,6 +181,21 @@ export default function UserWorksGrid() {
           )}
         </>
       )}
+
+      {editingPhoto && (
+        <EditPhotoModal
+          photo={editingPhoto}
+          onClose={() => setEditingPhoto(null)}
+          onSaved={(updated) => {
+            setWorks(prev => prev.map(w => w.id === updated.id ? updated : w));
+          }}
+        />
+      )}
+
+      {albumPhotoId && (
+        <AddToAlbumModal photoId={albumPhotoId} onClose={() => setAlbumPhotoId(null)} />
+      )}
     </div>
   );
 }
+
