@@ -72,6 +72,12 @@ function NavbarContent() {
         })
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'messages' },
         () => { fetchUnreadMessages(); })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' },
+        (payload) => {
+          if (payload.new.user_id === user.id && !payload.new.read) {
+            setUnreadCount(n => n + 1);
+          }
+        })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };

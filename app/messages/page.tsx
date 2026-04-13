@@ -23,6 +23,18 @@ export default function MessagesPage() {
     });
   }, [router]);
 
+  useEffect(() => {
+    if (!currentUser) return;
+    const channel = supabase
+      .channel(`messages-list-${currentUser.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' },
+        () => { loadConversations(currentUser.id); })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'conversations' },
+        () => { loadConversations(currentUser.id); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUser]);
+
   async function loadConversations(userId: string) {
     setLoading(true);
     try {

@@ -55,6 +55,13 @@ export default function UploadModal({ isOpen, onClose, onSuccess }: Props) {
 
   const handleClose = () => {
     files.forEach(f => URL.revokeObjectURL(f.preview));
+    setFiles([]);
+    setDescription('');
+    setCategory('scenery');
+    setLocation('南湖校区');
+    setExifData({ camera: '', iso: '', shutter: '', aperture: '' });
+    setTags([]);
+    setError('');
     onClose();
   };
 
