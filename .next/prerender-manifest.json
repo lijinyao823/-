@@ -1,6 +1,30 @@
 {
   "version": 4,
   "routes": {
+    "/leaderboard": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "next-action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/leaderboard",
+      "dataRoute": "/leaderboard.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
     "/_not-found": {
       "initialStatus": 404,
       "experimentalBypassFor": [
@@ -122,30 +146,6 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/profile": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "next-action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/profile",
-      "dataRoute": "/profile.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
-    },
     "/tags": {
       "experimentalBypassFor": [
         {
@@ -170,7 +170,7 @@
         "x-next-revalidate-tag-token"
       ]
     },
-    "/leaderboard": {
+    "/profile": {
       "experimentalBypassFor": [
         {
           "type": "header",
@@ -183,8 +183,8 @@
         }
       ],
       "initialRevalidateSeconds": false,
-      "srcRoute": "/leaderboard",
-      "dataRoute": "/leaderboard.rsc",
+      "srcRoute": "/profile",
+      "dataRoute": "/profile.rsc",
       "allowHeader": [
         "host",
         "x-matched-path",
@@ -198,8 +198,8 @@
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "88776581e9199f241b3511d3c38224ab",
-    "previewModeSigningKey": "c30ad36bec6b57ba02a5e366295cc2d314994233e76a8698be06dbb6cfecc0fc",
-    "previewModeEncryptionKey": "246573d7a4d89a4002421b360d3f8c68e7669880aa37792c8bbcb781fab8e8bb"
+    "previewModeId": "07f548352104f6877fefd52fd069571d",
+    "previewModeSigningKey": "82a01e03ae8dffd563d8ec272f1ccb5dd16444c03559ff186ba868c862464102",
+    "previewModeEncryptionKey": "7d759a3c90806e5dfaebe1b0aa0ea5a56edcec581821cfab7a4376fb0e5202be"
   }
 }
