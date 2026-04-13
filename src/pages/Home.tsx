@@ -1,90 +1,137 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, PlusCircle } from 'lucide-react';
-// 1. 引入 supabase 客户端
-import { supabase } from '../lib/supabase'; 
+import { Loader2, PlusCircle, Search } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { supabase } from '../lib/supabase';
 import PhotoGrid from '../components/PhotoGrid';
 import GalleryHeader from '../components/GalleryHeader';
 import LiquidButton from '../components/LiquidButton';
-// 新增：引入上传弹窗组件
 import UploadModal from '../components/UploadModal';
+import FeaturedCarousel from '../components/FeaturedCarousel';
+import { SortOption, LocationFilter } from '../types';
+
+const PAGE_SIZE = 12;
+
+const LOCATION_MAP: Record<LocationFilter, string> = {
+  all: '',
+  nanhu: '南湖',
+  mafangshan: '马房山',
+  yujiato: '余家头',
+};
 
 export default function Home() {
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+
   const [filter, setFilter] = useState<'all' | 'scenery' | 'humanities' | 'activity'>('all');
+  const [sort, setSort] = useState<SortOption>('latest');
+  const [location, setLocation] = useState<LocationFilter>('all');
   const [showGallery, setShowGallery] = useState(false);
-  
-  // 定义存储真实数据的状态
+
   const [allPhotos, setAllPhotos] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  
-  // 新增：控制弹窗显隐的状态
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  // 3. 获取数据的函数封装（方便重复调用以刷新列表）
-  const fetchPhotos = useCallback(async () => {
+  // 加载当前页数据
+  const fetchPhotos = useCallback(async (reset = false) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const { data, error } = await supabase
+      const currentPage = reset ? 0 : page;
+      let query = supabase
         .from('photos')
         .select('*')
-        .order('created_at', { ascending: false });
+        .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
 
+      // 分类筛选
+      if (filter !== 'all') query = query.eq('category', filter);
+
+      // 地点筛选
+      const locStr = LOCATION_MAP[location];
+      if (locStr) query = query.ilike('location', `%${locStr}%`);
+
+      // 全文搜索
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%,author_name.ilike.%${searchQuery}%`);
+      }
+
+      // 排序
+      if (sort === 'latest') query = query.order('created_at', { ascending: false });
+      else if (sort === 'most_liked') query = query.order('likes_count', { ascending: false });
+      else if (sort === 'most_commented') query = query.order('comments_count', { ascending: false });
+
+      const { data, error } = await query;
       if (error) throw error;
-      setAllPhotos(data || []);
-    } catch (error) {
-      console.error('获取画廊数据失败:', error);
+
+      const newPhotos = data || [];
+      if (reset) {
+        setAllPhotos(newPhotos);
+        setPage(1);
+      } else {
+        setAllPhotos(prev => [...prev, ...newPhotos]);
+        setPage(p => p + 1);
+      }
+      setHasMore(newPhotos.length === PAGE_SIZE);
+    } catch (err) {
+      console.error('获取画廊数据失败:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filter, sort, location, searchQuery, page]);
 
-  // 页面加载时抓取
+  // 当筛选条件变化时重置
   useEffect(() => {
-    fetchPhotos();
-  }, [fetchPhotos]);
+    setPage(0);
+    setHasMore(true);
+    fetchPhotos(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, sort, location, searchQuery]);
 
-  // 4. 根据分类过滤
-  const filteredPhotos = filter === 'all' 
-    ? allPhotos 
-    : allPhotos.filter(p => p.category === filter);
+  // Intersection Observer 实现无限滚动
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!showGallery) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading && hasMore) {
+          fetchPhotos(false);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (sentinelRef.current) observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [showGallery, loading, hasMore, fetchPhotos]);
 
   const handleExplore = () => {
     setShowGallery(true);
     setTimeout(() => {
       const element = document.getElementById('gallery');
-      if (element) {
-        element.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start' 
-        });
-      }
+      if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
   };
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
-      {/* 1. Hero Section */}
+      {/* Hero Section */}
       <section className="relative h-screen flex items-center justify-center">
         <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1541339907198-e08756ebafe3?auto=format&fit=crop&q=80&w=2000" 
-            alt="WUT Campus" 
-            className="w-full h-full object-cover"
-            referrerPolicy="no-referrer"
-          />
+          <FeaturedCarousel />
           <div className="absolute inset-0 bg-black/40" />
         </div>
-        
+
         <div className="relative z-10 w-full max-w-4xl px-4 flex flex-col items-center text-center">
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight"
           >
             记录武理，光影随行
           </motion.h1>
-          
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -92,20 +139,15 @@ export default function Home() {
           >
             在每一个光影交错的瞬间，发现武汉理工大学的灵魂。
           </motion.p>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, type: "spring", stiffness: 260, damping: 20 }}
+              transition={{ delay: 0.4, type: 'spring', stiffness: 260, damping: 20 }}
             >
-              <LiquidButton 
-                text={loading ? "加载中..." : "探索画廊"} 
-                onClick={handleExplore} 
-              />
+              <LiquidButton text="探索画廊" onClick={handleExplore} />
             </motion.div>
-
-            {/* 新增：快速发布作品按钮 */}
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -120,55 +162,72 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Gallery Section */}
+      {/* Gallery Section */}
       {showGallery && (
-        <motion.section 
-          id="gallery" 
+        <motion.section
+          id="gallery"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20"
         >
-          {/* 标题与分类筛选组件 */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
-            <GalleryHeader filter={filter} setFilter={setFilter} />
-            
-            {/* 画廊区的小发布按钮 */}
-            <button 
-              onClick={() => setIsUploadModalOpen(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 font-bold self-start md:self-auto"
-            >
-              <PlusCircle size={18} />
-              上传光影
-            </button>
+          <div className="flex flex-col gap-4 mb-4">
+            <GalleryHeader
+              filter={filter}
+              setFilter={(f) => { setFilter(f); }}
+              sort={sort}
+              setSort={(s) => { setSort(s); }}
+              location={location}
+              setLocation={(l) => { setLocation(l); }}
+            />
+
+            {/* 搜索结果提示 */}
+            {searchQuery && (
+              <div className="flex items-center gap-2 text-sm text-blue-600 font-medium">
+                <Search size={14} />
+                搜索"{searchQuery}"的结果，共 {allPhotos.length} 张
+              </div>
+            )}
+
+            {/* 上传按钮 */}
+            <div className="flex justify-end">
+              <button
+                onClick={() => setIsUploadModalOpen(true)}
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 font-bold"
+              >
+                <PlusCircle size={18} />
+                上传光影
+              </button>
+            </div>
           </div>
 
-          {loading ? (
-            <div className="flex flex-col items-center py-20 text-gray-400">
-              <Loader2 className="animate-spin mb-2" size={32} />
-              <p>正在同步云端画廊...</p>
+          {allPhotos.length === 0 && !loading ? (
+            <div className="text-center py-20 text-gray-400 italic">
+              {searchQuery ? `没有找到"${searchQuery}"相关的作品。` : '这片区域暂时还没有光影，期待你的第一张作品。'}
             </div>
           ) : (
-            <PhotoGrid photos={filteredPhotos} />
+            <PhotoGrid photos={allPhotos} />
           )}
 
-          {!loading && filteredPhotos.length === 0 && (
-            <div className="text-center py-20 text-gray-400 italic">
-              这片区域暂时还没有光影，期待你的第一张作品。
-            </div>
-          )}
+          {/* 无限滚动 sentinel */}
+          <div ref={sentinelRef} className="py-8 flex justify-center">
+            {loading && <Loader2 className="animate-spin text-gray-400" size={28} />}
+            {!loading && !hasMore && allPhotos.length > 0 && (
+              <p className="text-gray-400 text-sm">已加载全部作品 ✓</p>
+            )}
+          </div>
         </motion.section>
       )}
 
-      {/* 3. 新增：上传弹窗组件 */}
-      <UploadModal 
+      <UploadModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onSuccess={() => {
-          fetchPhotos(); // 上传成功后重新获取数据
-          setIsUploadModalOpen(false); // 关闭弹窗
+          fetchPhotos(true);
+          setIsUploadModalOpen(false);
+          setShowGallery(true);
         }}
       />
-    </div> 
+    </div>
   );
 }

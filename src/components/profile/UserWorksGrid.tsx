@@ -1,26 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Grid, Trash2, Heart } from 'lucide-react';
-import { MOCK_PHOTOS } from '../../data/mockData';
+import { Grid, Trash2, Heart, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabase';
 
 export default function UserWorksGrid() {
   const [activeTab, setActiveTab] = useState<'works' | 'likes'>('works');
-  const userWorks = MOCK_PHOTOS.slice(0, 3);
+  const [works, setWorks] = useState<any[]>([]);
+  const [likedPhotos, setLikedPhotos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const navigate = useNavigate();
+
+  const loadData = useCallback(async (user: any) => {
+    setLoading(true);
+    try {
+      const { data: myWorks } = await supabase
+        .from('photos')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      setWorks(myWorks || []);
+
+      // 赞过的照片
+      const { data: likesData } = await supabase
+        .from('likes')
+        .select('photo_id')
+        .eq('user_id', user.id);
+      if (likesData && likesData.length > 0) {
+        const photoIds = likesData.map((l: any) => l.photo_id);
+        const { data: likedData } = await supabase
+          .from('photos')
+          .select('*')
+          .in('id', photoIds);
+        setLikedPhotos(likedData || []);
+      } else {
+        setLikedPhotos([]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUser(user);
+      if (user) loadData(user);
+    });
+  }, [loadData]);
+
+  const handleDelete = async (photo: any) => {
+    if (!confirm(`确定删除"${photo.title}"吗？此操作不可撤销。`)) return;
+
+    // 从 Storage 删除文件
+    if (photo.image_url) {
+      try {
+        const urlParts = photo.image_url.split('/');
+        const storagePathIndex = urlParts.findIndex((p: string) => p === 'gallery');
+        if (storagePathIndex !== -1) {
+          const storagePath = urlParts.slice(storagePathIndex + 1).join('/');
+          await supabase.storage.from('gallery').remove([storagePath]);
+        }
+      } catch {
+        // 忽略存储删除错误，继续删除数据库记录
+      }
+    }
+
+    // 从数据库删除
+    await supabase.from('photos').delete().eq('id', photo.id).eq('user_id', currentUser.id);
+    setWorks(prev => prev.filter(w => w.id !== photo.id));
+  };
+
+  const displayPhotos = activeTab === 'works' ? works : likedPhotos;
 
   return (
     <div className="space-y-8">
       {/* Tabs */}
       <div className="flex gap-8 border-b border-gray-100">
-        {['works', 'likes'].map((tab) => (
-          <button 
-            key={tab}
-            onClick={() => setActiveTab(tab as any)}
-            className={`pb-4 text-sm font-bold transition-all relative ${
-              activeTab === tab ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
-            }`}
+        {[
+          { id: 'works', label: `我的作品 (${works.length})` },
+          { id: 'likes', label: `赞过的 (${likedPhotos.length})` },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            className={`pb-4 text-sm font-bold transition-all relative ${activeTab === tab.id ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
           >
-            {tab === 'works' ? '我的作品' : '赞过的'}
-            {activeTab === tab && (
+            {tab.label}
+            {activeTab === tab.id && (
               <motion.div layoutId="profileTab" className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-full" />
             )}
           </button>
@@ -28,34 +95,62 @@ export default function UserWorksGrid() {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {userWorks.map((photo) => (
-          <motion.div 
-            key={photo.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl overflow-hidden shadow-sm group border border-gray-100"
-          >
-            <div className="aspect-video relative overflow-hidden">
-              <img src={photo.url} alt={photo.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                <button className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"><Grid size={18} /></button>
-                <button className="p-3 bg-red-500/80 backdrop-blur-md rounded-full text-white hover:bg-red-600"><Trash2 size={18} /></button>
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="animate-spin text-gray-400" size={28} />
+        </div>
+      ) : displayPhotos.length === 0 ? (
+        <p className="text-center text-gray-400 italic py-12">
+          {activeTab === 'works' ? '还没有发布任何作品，快去上传吧！' : '还没有点赞任何作品'}
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {displayPhotos.map((photo) => (
+            <motion.div
+              key={photo.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-2xl overflow-hidden shadow-sm group border border-gray-100"
+            >
+              <div className="aspect-video relative overflow-hidden">
+                <img
+                  src={photo.image_url || photo.url}
+                  alt={photo.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                  <button
+                    onClick={() => navigate(`/photo/${photo.id}`)}
+                    className="p-3 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white/40"
+                  >
+                    <Grid size={18} />
+                  </button>
+                  {activeTab === 'works' && (
+                    <button
+                      onClick={() => handleDelete(photo)}
+                      className="p-3 bg-red-500/80 backdrop-blur-md rounded-full text-white hover:bg-red-600"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-            <div className="p-4 flex justify-between items-center">
-              <div>
-                <h4 className="font-bold text-gray-900 text-sm">{photo.title}</h4>
-                <p className="text-[10px] text-gray-400">2024-03-20发布</p>
+              <div className="p-4 flex justify-between items-center">
+                <div>
+                  <h4 className="font-bold text-gray-900 text-sm">{photo.title}</h4>
+                  <p className="text-[10px] text-gray-400">
+                    {photo.created_at ? new Date(photo.created_at).toLocaleDateString('zh-CN') : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 text-blue-600">
+                  <Heart size={12} className="fill-current" />
+                  <span className="text-xs font-bold">{photo.likes_count || 0}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-blue-600">
-                <Heart size={12} className="fill-current" />
-                <span className="text-xs font-bold">{photo.likes}</span>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
