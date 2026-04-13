@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Info, MapPin, Calendar, Tag, FolderPlus } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import AddToAlbumModal from '@/components/AddToAlbumModal';
+import AddToAlbumModal from '@/components/modals/AddToAlbumModal';
 
 export default function PhotoInfoSidebar({ photo }: { photo: any }) {
   const [photoTags, setPhotoTags] = useState<string[]>([]);

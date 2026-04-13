@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Heart, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Lightbox from '@/components/Lightbox';
+import Lightbox from '@/components/gallery/Lightbox';
 
 interface PhotoGridProps {
   photos: any[];

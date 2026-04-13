@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import PhotoGrid from '@/components/PhotoGrid';
+import PhotoGrid from '@/components/gallery/PhotoGrid';
 import { Loader2 } from 'lucide-react';
 
 export default function TagPage() {

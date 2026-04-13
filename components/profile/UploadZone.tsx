@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Upload } from 'lucide-react';
-import UploadModal from '@/components/UploadModal';
+import UploadModal from '@/components/modals/UploadModal';
 
 interface Props {
   onSuccess?: () => void;
