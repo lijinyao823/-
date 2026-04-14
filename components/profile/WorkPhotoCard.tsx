@@ -22,7 +22,7 @@ export default function WorkPhotoCard({ photo, isOwner, onView, onEdit, onDelete
     >
       <div className="aspect-video relative overflow-hidden">
         <img
-          src={photo.image_url || photo.url}
+          src={photo.image_url}
           alt={photo.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />

@@ -1,3 +1,9 @@
 {
-  "/profile/page": "app/profile/page.js"
+  "/photographers/page": "app/photographers/page.js",
+  "/page": "app/page.js",
+  "/tags/page": "app/tags/page.js",
+  "/leaderboard/page": "app/leaderboard/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/user/[userId]/page": "app/user/[userId]/page.js",
+  "/photo/[id]/page": "app/photo/[id]/page.js"
 }

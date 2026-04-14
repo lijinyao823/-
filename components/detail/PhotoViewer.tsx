@@ -61,7 +61,7 @@ export default function PhotoViewer({ photo }: { photo: any }) {
   };
 
   const handleDownload = async () => {
-    const url = photo.image_url || photo.url;
+    const url = photo.image_url ;
     if (!url) return;
     try {
       const img = new Image();
@@ -107,7 +107,7 @@ export default function PhotoViewer({ photo }: { photo: any }) {
         className="bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100"
       >
         <img
-          src={photo.image_url || photo.url}
+          src={photo.image_url}
           alt={photo.title}
           className="w-full h-auto max-h-[80vh] object-contain mx-auto"
         />

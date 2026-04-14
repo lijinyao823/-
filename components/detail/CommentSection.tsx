@@ -29,13 +29,34 @@ export default function CommentSection({ photoId, photoTitle = '' }: Props) {
     return () => { supabase.removeChannel(channel); };
   }, [photoId]);
 
-  async function loadComments() {
-    const { data } = await supabase.from('comments').select('*').eq('photo_id', photoId).order('created_at', { ascending: true });
-    const all = (data || []) as Comment[];
-    const topLevel = all.filter(c => !c.parent_id);
-    topLevel.forEach(c => { c.replies = all.filter(r => r.parent_id === c.id); });
-    setComments(topLevel);
+ async function loadComments() {
+  // ✅ 核心修改：使用联表查询，获取评论的同时抓取对应用户的 profile
+  const { data, error } = await supabase
+    .from('comments')
+    .select(`
+      *,
+      user_profiles (
+        avatar_url,
+        username
+      )
+    `)
+    .eq('photo_id', photoId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    console.error("加载评论失败:", error.message);
+    return;
   }
+
+  const all = (data || []) as any[]; // 先用 any 避开类型检查
+  const topLevel = all.filter(c => !c.parent_id);
+  
+  topLevel.forEach(c => { 
+    c.replies = all.filter(r => r.parent_id === c.id); 
+  });
+  
+  setComments(topLevel);
+}
 
   const handleAddComment = async (e: React.FormEvent) => {
     e.preventDefault();

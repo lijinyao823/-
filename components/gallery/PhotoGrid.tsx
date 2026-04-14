@@ -18,7 +18,7 @@ export default function PhotoGrid({ photos }: PhotoGridProps) {
     <>
       <div className="columns-1 md:columns-2 lg:columns-3 gap-4 p-4">
         {photos.map((photo, index) => {
-          const imgSrc = photo.image_url || photo.url || '';
+          const imgSrc = photo.image_url  || '';
           const authorName = photo.author_name || photo.author || '匿名校友';
           const likesCount = photo.likes_count ?? photo.likes ?? 0;
 

@@ -128,7 +128,7 @@ export default function AlbumPage() {
               <div key={photo.id} className="relative group rounded-xl overflow-hidden shadow-sm bg-white">
                 <div className="aspect-square overflow-hidden">
                   <img
-                    src={photo.image_url || photo.url}
+                    src={photo.image_url}
                     alt={photo.title}
                     className="w-full h-full object-cover"
                   />
