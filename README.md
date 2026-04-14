@@ -117,7 +117,7 @@
 2. 配置环境变量，在项目根目录创建 `.env.local` 文件：
    ```env
    NEXT_PUBLIC_SUPABASE_URL=你的_Supabase_项目_URL
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=你的_Supabase_匿名密钥
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=你的_Supabase_匿名密钥
    GEMINI_API_KEY=你的_Gemini_API_密钥
    ```
 

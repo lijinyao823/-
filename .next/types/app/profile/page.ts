@@ -1,4 +1,4 @@
-// File: /home/runner/work/-/-/app/profile/page.tsx
+// File: D:\AAAAA\网页设计大赛\理工光影---武汉理工大学校园摄影展示平台\app\profile\page.tsx
 import * as entry from '../../../../app/profile/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

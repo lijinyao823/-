@@ -1,0 +1,59 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+
+export async function middleware(request: NextRequest) {
+  // 1. 创建一个初始响应
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
+
+  // 2. 检查环境变量（防御性编程）
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    // 如果变量没加载好，直接跳过中间件，防止它报 "No API key" 导致全站崩溃
+    return supabaseResponse;
+  }
+
+  // 3. 初始化 Supabase
+  const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
+      },
+      setAll(cookiesToSet) {
+        // 这是官方推荐的最稳妥的 Cookie 设置方式
+        cookiesToSet.forEach(({ name, value, options }) => {
+          request.cookies.set(name, value);
+          supabaseResponse.cookies.set(name, value, options);
+        });
+      },
+    },
+  });
+
+  // 4. 获取用户信息 (这步最容易报错，加上 try-catch)
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // 5. 路由保护逻辑
+    if (!user && request.nextUrl.pathname.startsWith('/profile')) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
+  } catch (e) {
+    // 如果 Auth 请求失败，静默失败，保证页面至少能打开
+    console.error("Middleware Auth Error:", e);
+  }
+
+  return supabaseResponse;
+}
+
+export const config = {
+  // 建议 matcher 排除掉静态资源，减轻服务器压力
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+};
